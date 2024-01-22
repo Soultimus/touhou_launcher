@@ -1,0 +1,97 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net7.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+    <ApplicationIcon>images\icon.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="images\bg.jpg" />
+    <None Remove="images\fangames\1.jpg" />
+    <None Remove="images\fangames\2.jpg" />
+    <None Remove="images\spinoffs\1.jpg" />
+    <None Remove="images\spinoffs\2.jpg" />
+    <None Remove="images\spinoffs\3.jpg" />
+    <None Remove="images\spinoffs\4.jpg" />
+    <None Remove="images\spinoffs\5.jpg" />
+    <None Remove="images\spinoffs\6.jpg" />
+    <None Remove="images\tasofro\1.jpg" />
+    <None Remove="images\tasofro\2.jpg" />
+    <None Remove="images\tasofro\3.jpg" />
+    <None Remove="images\tasofro\4.jpg" />
+    <None Remove="images\tasofro\5.jpg" />
+    <None Remove="images\tasofro\6.jpg" />
+    <None Remove="images\tasofro\7.jpg" />
+    <None Remove="images\th10cover.jpg" />
+    <None Remove="images\th11cover.jpg" />
+    <None Remove="images\th12cover.jpg" />
+    <None Remove="images\th13cover.jpg" />
+    <None Remove="images\th14cover.jpg" />
+    <None Remove="images\th15cover.jpg" />
+    <None Remove="images\th16cover.jpg" />
+    <None Remove="images\th17cover.jpg" />
+    <None Remove="images\th18cover.jpg" />
+    <None Remove="images\th19cover.jpg" />
+    <None Remove="images\th6cover.jpg" />
+    <None Remove="images\th7cover.jpg" />
+    <None Remove="images\th8cover.jpg" />
+    <None Remove="images\th9cover.jpg" />
+    <None Remove="info\dirs.txt" />
+    <None Remove="info\fangames.txt" />
+    <None Remove="info\songNamesEN.json" />
+    <None Remove="info\spinoffs.txt" />
+    <None Remove="info\tasofro.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="images\icon.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="images\bg.jpg" />
+    <Resource Include="images\fangames\1.jpg" />
+    <Resource Include="images\fangames\2.jpg" />
+    <Resource Include="images\spinoffs\1.jpg" />
+    <Resource Include="images\spinoffs\2.jpg" />
+    <Resource Include="images\spinoffs\3.jpg" />
+    <Resource Include="images\spinoffs\4.jpg" />
+    <Resource Include="images\spinoffs\5.jpg" />
+    <Resource Include="images\spinoffs\6.jpg" />
+    <Resource Include="images\tasofro\1.jpg" />
+    <Resource Include="images\tasofro\2.jpg" />
+    <Resource Include="images\tasofro\3.jpg" />
+    <Resource Include="images\tasofro\4.jpg" />
+    <Resource Include="images\tasofro\5.jpg" />
+    <Resource Include="images\tasofro\6.jpg" />
+    <Resource Include="images\tasofro\7.jpg" />
+    <Resource Include="images\th10cover.jpg" />
+    <Resource Include="images\th11cover.jpg" />
+    <Resource Include="images\th12cover.jpg" />
+    <Resource Include="images\th13cover.jpg" />
+    <Resource Include="images\th14cover.jpg" />
+    <Resource Include="images\th15cover.jpg" />
+    <Resource Include="images\th16cover.jpg" />
+    <Resource Include="images\th17cover.jpg" />
+    <Resource Include="images\th18cover.jpg" />
+    <Resource Include="images\th19cover.jpg" />
+    <Resource Include="images\th6cover.jpg" />
+    <Resource Include="images\th7cover.jpg" />
+    <Resource Include="images\th8cover.jpg" />
+    <Resource Include="images\th9cover.jpg" />
+    <EmbeddedResource Include="info\fangames.txt" />
+    <EmbeddedResource Include="info\songNamesEN.json" />
+    <EmbeddedResource Include="info\dirs.txt">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="info\spinoffs.txt" />
+    <EmbeddedResource Include="info\tasofro.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NAudio" Version="2.2.1" />
+  </ItemGroup>
+
+</Project>
