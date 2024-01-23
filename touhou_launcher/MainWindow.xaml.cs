@@ -21,8 +21,8 @@ namespace th_launcher_wbf
         private List<string> gameDirs;
         private List<string> tasofroDirs;
         private List<string> spinoffDirs;
-        private List<string> fanGameUris;
-        private JsonArray songs;
+        private List<string> fanGameDirs;
+        private JsonObject songInfo;
         private Button playPause;
         private bool isPlaying;
 
@@ -32,10 +32,10 @@ namespace th_launcher_wbf
         public MainWindow()
         {
             gameDirs = GetGameDirectories("dirs.txt");
-            fanGameUris = GetGameDirectories("fangames.txt");
+            fanGameDirs = GetGameDirectories("fangames.txt");
             tasofroDirs = GetGameDirectories("tasofro.txt");
             spinoffDirs = GetGameDirectories("spinoffs.txt");
-            songs = GetSongNames();
+            songInfo = GetSongNames();
             isPlaying = false;
 
             InitializeComponent();
@@ -46,23 +46,23 @@ namespace th_launcher_wbf
         {
             Width = 1330;
             Height = 700;
-            Background = new ImageBrush(new BitmapImage(new Uri($"pack://application:,,,/images/bg.jpg"))); // background color = #293243
+            // Background = new ImageBrush(new BitmapImage(new Uri($"pack://application:,,,/images/bg.jpg"))); // background color = #293243
+            Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#293243"));
             ResizeMode = ResizeMode.NoResize;
 
             TabControl tabControl = new TabControl();
             tabControl.Background = Brushes.Transparent;
 
-            // TODO: Create a factory method to make the game tabs and avoid repetition
             TabItem shmupsTab = CreateShmupsTab();
             tabControl.Items.Add(shmupsTab);
 
-            TabItem tasofroTab = CreateTasoFroTab();
+            TabItem tasofroTab = CreateGameTab("TasoFro", "pack://application:,,,/images/tasofro/", 7, tasofroDirs);
             tabControl.Items.Add(tasofroTab);
 
-            TabItem spinoffsTab = CreateSpinOffsTab();
+            TabItem spinoffsTab = CreateGameTab("Spin-Offs", "pack://application:,,,/images/spinoffs/", 6, spinoffDirs);
             tabControl.Items.Add(spinoffsTab);
 
-            TabItem fanGamesTab = CreateFanGamesTab();
+            TabItem fanGamesTab = CreateGameTab("Fan Games", "pack://application:,,,/images/fangames/", 2, fanGameDirs);
             tabControl.Items.Add(fanGamesTab);
 
             TabItem musicRoomTab = CreateMusicRoomTab();
@@ -112,6 +112,38 @@ namespace th_launcher_wbf
             return shmupsTab;
         }
 
+        private TabItem CreateGameTab(string header, string imageFilePath, int numberOfGames, List<string> dirs)
+        {
+            TabItem tab = new TabItem();
+            tab.Header = header;
+            tab.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4f6082"));
+
+            ScrollViewer scrollViewer = new ScrollViewer();
+            Grid g = new Grid();
+            scrollViewer.Content = g;
+            g.Background = Brushes.Transparent;
+            SetGridDefinitions(ref g, numberOfGames);
+
+            for (int i = 0; i < numberOfGames; i++)
+            {
+                Button b = CreateGameButton(imageFilePath + (i + 1) + ".jpg", dirs[i]); //"pack://application:,,,/images/fangames/"
+
+                int row = i / BUTTONS_PER_ROW;
+                int column = i % BUTTONS_PER_ROW;
+
+                Grid.SetRow(b, row);
+                Grid.SetColumn(b, column);
+
+                Thickness margin = new Thickness(BUTTON_MARGIN);
+                b.Margin = margin;
+
+                g.Children.Add(b);
+            }
+            tab.Content = g;
+
+            return tab;
+        }
+
         private TabItem CreateMusicRoomTab()
         {
             TabItem musicRoomTab = new TabItem();
@@ -138,28 +170,17 @@ namespace th_launcher_wbf
             // comboBoxStyle.Setters.Add(new Setter(ForegroundProperty, Brushes.WhiteSmoke));
             // comboBox.Style = comboBoxStyle;
 
-            // TODO: Find a better way to add the names. Maybe modify the JSON in the future
-            comboBox.Items.Add("Embodiment of Scarlet Devil");
-            comboBox.Items.Add("Perfect Cherry Blossom");
-            comboBox.Items.Add("Imperishable Night");
-            comboBox.Items.Add("Phantasmagoria of Flower View");
-            comboBox.Items.Add("Mountain Of Faith");
-            comboBox.Items.Add("Subterranean Animism");
-            comboBox.Items.Add("Undefined Fantastic Object");
-            comboBox.Items.Add("Ten Desires");
-            comboBox.Items.Add("Double Dealing Character");
-            comboBox.Items.Add("Legacy of Lunatic Kingdom");
-            comboBox.Items.Add("Hidden Star in Four Seasons");
-            comboBox.Items.Add("Wily Beast and Weakest Creature");
-            comboBox.Items.Add("Unconnected Marketeers");
-            comboBox.Items.Add("Unfinished Dream of All Living Ghost");
-            comboBox.SelectedIndex = 4;
+            foreach (var elem in songInfo)
+            {
+                comboBox.Items.Add(elem.Key);
+            }
+            comboBox.SelectedIndex = 4; // Default to MoF for the time being
 
             // Play / Pause Button styling and logic
             playPause = new Button();
             playPause.IsEnabled = false;
             playPause.Content = "⏵";
-            playPause.Style = GetButtonStyle();
+            playPause.Style = SetButtonStyle();
             playPause.Foreground = Brushes.WhiteSmoke;
             playPause.FontSize = 45;
             playPause.FontWeight = FontWeights.Bold;
@@ -182,6 +203,27 @@ namespace th_launcher_wbf
                 }
             };
 
+            Button stop = new Button();
+            stop.Content = "■";
+            stop.Style = SetButtonStyle();
+            stop.Foreground = Brushes.WhiteSmoke;
+            stop.FontSize = 45;
+            stop.FontWeight = FontWeights.Bold;
+            stop.Height = 75;
+            stop.Width = 75;
+            SetButtonCursorLogic(ref stop);
+            stop.Click += (s, e) =>
+            {
+                if (isPlaying)
+                {
+                    isPlaying = false;
+                    playPause.Content = "⏵";
+                    playPause.IsEnabled = false;
+                    m.StopTrack();
+                }
+            };
+
+
             // Recreating the music buttons
             comboBox.SelectionChanged += (s, e) =>
             {
@@ -200,6 +242,7 @@ namespace th_launcher_wbf
             DockPanel.SetDock(comboBox, Dock.Bottom);
             controls.Children.Add(comboBox);
             controls.Children.Add(playPause);
+            controls.Children.Add(stop);
 
             DockPanel.SetDock(scrollViewer, Dock.Left);
             d.Children.Add(scrollViewer);
@@ -212,105 +255,9 @@ namespace th_launcher_wbf
             
         }
 
-        private TabItem CreateFanGamesTab()
-        {
-            TabItem fanGamesTab = new TabItem();
-            fanGamesTab.Header = "Fan Games";
-            const int NUMBER_OF_FANGAMES = 2;
-
-            ScrollViewer scrollViewer = new ScrollViewer();
-            Grid fanGamesGrid = new Grid();
-            scrollViewer.Content = fanGamesGrid;
-            fanGamesGrid.Background = Brushes.Transparent;
-            SetGridDefinitions(ref fanGamesGrid, NUMBER_OF_FANGAMES);
-
-            for (int i = 0; i < NUMBER_OF_FANGAMES; i++)
-            {
-                Button b = CreateGameButton($"pack://application:,,,/images/fangames/{i + 1}.jpg", fanGameUris[i]);
-
-                int row = i / BUTTONS_PER_ROW;
-                int column = i % BUTTONS_PER_ROW;
-
-                Grid.SetRow(b, row);
-                Grid.SetColumn(b, column);
-
-                Thickness margin = new Thickness(BUTTON_MARGIN);
-                b.Margin = margin;
-
-                fanGamesGrid.Children.Add(b);
-            }
-            fanGamesTab.Content = fanGamesGrid;
-
-            return fanGamesTab;
-        }
-
-        private TabItem CreateTasoFroTab()
-        {
-            TabItem tasofroTab = new TabItem();
-            tasofroTab.Header = "TasoFro";
-            const int NUMBER_OF_TASOFRO_GAMES = 7;
-
-            ScrollViewer scrollViewer = new ScrollViewer();
-            Grid tasoFroGamesGrid = new Grid();
-            scrollViewer.Content = tasoFroGamesGrid;
-            tasoFroGamesGrid.Background = Brushes.Transparent;
-            SetGridDefinitions(ref tasoFroGamesGrid, NUMBER_OF_TASOFRO_GAMES);
-
-            for (int i = 0; i < NUMBER_OF_TASOFRO_GAMES; i++)
-            {
-                Button b = CreateGameButton($"pack://application:,,,/images/tasofro/{i + 1}.jpg", tasofroDirs[i]);
-
-                int row = i / BUTTONS_PER_ROW;
-                int column = i % BUTTONS_PER_ROW;
-
-                Grid.SetRow(b, row);
-                Grid.SetColumn(b, column);
-
-                Thickness margin = new Thickness(BUTTON_MARGIN);
-                b.Margin = margin;
-
-                tasoFroGamesGrid.Children.Add(b);
-            }
-            tasofroTab.Content = tasoFroGamesGrid;
-
-            return tasofroTab;
-        }
-
-        private TabItem CreateSpinOffsTab()
-        {
-            TabItem spinoffsTab = new TabItem();
-            spinoffsTab.Header = "Spin-Offs";
-            const int NUMBER_OF_SPINOFF_GAMES = 6;
-
-            ScrollViewer scrollViewer = new ScrollViewer();
-            Grid spinoffGames = new Grid();
-            scrollViewer.Content = spinoffGames;
-            spinoffGames.Background = Brushes.Transparent;
-            SetGridDefinitions(ref spinoffGames, NUMBER_OF_SPINOFF_GAMES);
-
-            for (int i = 0; i < NUMBER_OF_SPINOFF_GAMES; i++)
-            {
-                Button b = CreateGameButton($"pack://application:,,,/images/spinoffs/{i + 1}.jpg", spinoffDirs[i]);
-
-                int row = i / BUTTONS_PER_ROW;
-                int column = i % BUTTONS_PER_ROW;
-
-                Grid.SetRow(b, row);
-                Grid.SetColumn(b, column);
-
-                Thickness margin = new Thickness(BUTTON_MARGIN);
-                b.Margin = margin;
-
-                spinoffGames.Children.Add(b);
-            }
-            spinoffsTab.Content = spinoffGames;
-
-            return spinoffsTab;
-        }
-
         private Grid CreateMusicButtons(Grid g, TextBlock t, int gameId)
         {
-            JsonArray? songNames = songs[gameId - 6] as JsonArray;
+            JsonArray? songNames = songInfo.ElementAt(gameId - 6).Value as JsonArray;
             int index = 0;
 
             foreach (var song in songNames)
@@ -324,7 +271,7 @@ namespace th_launcher_wbf
                 b.Height = 50;
                 b.Width = 550;
                 b.Foreground = Brushes.WhiteSmoke;
-                b.Style = GetButtonStyle();
+                b.Style = SetButtonStyle();
                 b.Content = song;
                 SetButtonCursorLogic(ref b);
 
@@ -409,7 +356,7 @@ namespace th_launcher_wbf
             return dirs;
         }
 
-        private JsonArray GetSongNames()
+        private JsonObject GetSongNames()
         {
             JsonArray songNames = null;
             var assembly = Assembly.GetExecutingAssembly();
@@ -417,15 +364,13 @@ namespace th_launcher_wbf
             using (Stream stream = assembly.GetManifestResourceStream(resourceName)) 
             using (StreamReader reader = new StreamReader(stream))
             {
-
                 string jsonString = reader.ReadToEnd();
-
-                songNames = JsonSerializer.Deserialize<JsonArray>(jsonString);
+                songInfo = JsonSerializer.Deserialize<JsonObject>(jsonString);
             }
-            return songNames;
+            return songInfo;
         }
 
-        private Style GetButtonStyle()
+        private Style SetButtonStyle()
         {
             Style buttonStyle = new Style(typeof(Button));
 
