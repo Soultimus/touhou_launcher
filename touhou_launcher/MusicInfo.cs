@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace th_launcher_wbf
+namespace touhou_launcher
 {
     public class MusicInfo
     {

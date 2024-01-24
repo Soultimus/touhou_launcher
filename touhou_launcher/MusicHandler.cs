@@ -3,7 +3,7 @@ using System.IO;
 using System.Runtime;
 using NAudio.Wave;
 using NAudio.Wave.Compression;
-using th_launcher_wbf;
+using touhou_launcher;
 
 public class MusicHandler
 {

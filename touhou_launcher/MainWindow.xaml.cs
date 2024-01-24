@@ -13,17 +13,15 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-namespace th_launcher_wbf
+namespace touhou_launcher
 {
     public partial class MainWindow : Window
     {
         private MusicHandler m;
-        private List<string> gameDirs;
-        private List<string> tasofroDirs;
-        private List<string> spinoffDirs;
-        private List<string> fanGameDirs;
-        private JsonObject songInfo;
         private Button playPause;
+        private JsonObject allDirs;
+        private JsonObject gameDirs;
+        private JsonObject songInfo;
         private bool isPlaying;
 
         private const int BUTTONS_PER_ROW = 4;
@@ -31,11 +29,9 @@ namespace th_launcher_wbf
 
         public MainWindow()
         {
-            gameDirs = GetGameDirectories("dirs.txt");
-            fanGameDirs = GetGameDirectories("fangames.txt");
-            tasofroDirs = GetGameDirectories("tasofro.txt");
-            spinoffDirs = GetGameDirectories("spinoffs.txt");
-            songInfo = GetSongNames();
+            GetJsonFromFile("dirs.json", ref allDirs);
+            gameDirs = allDirs.ElementAt(0).Value as JsonObject;
+            GetJsonFromFile("songNamesEN.json", ref songInfo);
             isPlaying = false;
 
             InitializeComponent();
@@ -56,17 +52,26 @@ namespace th_launcher_wbf
             TabItem shmupsTab = CreateShmupsTab();
             tabControl.Items.Add(shmupsTab);
 
-            TabItem tasofroTab = CreateGameTab("TasoFro", "pack://application:,,,/images/tasofro/", 7, tasofroDirs);
+            TabItem tasofroTab = CreateGameTab("TasoFro", "pack://application:,,,/images/tasofro/", allDirs.ElementAt(1).Value as JsonObject);
             tabControl.Items.Add(tasofroTab);
 
-            TabItem spinoffsTab = CreateGameTab("Spin-Offs", "pack://application:,,,/images/spinoffs/", 6, spinoffDirs);
+            TabItem spinoffsTab = CreateGameTab("Spin-Offs", "pack://application:,,,/images/spinoffs/", allDirs.ElementAt(2).Value as JsonObject);
             tabControl.Items.Add(spinoffsTab);
 
-            TabItem fanGamesTab = CreateGameTab("Fan Games", "pack://application:,,,/images/fangames/", 2, fanGameDirs);
+            TabItem fanGamesTab = CreateGameTab("Fan Games", "pack://application:,,,/images/fangames/", allDirs.ElementAt(3).Value as JsonObject);
             tabControl.Items.Add(fanGamesTab);
 
             TabItem musicRoomTab = CreateMusicRoomTab();
             tabControl.Items.Add(musicRoomTab);
+
+            tabControl.SelectionChanged += (s, e) =>
+            {
+                // TODO randomize (and draw) backgrounds
+                if (shmupsTab.IsSelected)
+                {
+                    // tabControl.Background = new ImageBrush(new BitmapImage(new Uri($"pack://application:,,,/images/bg.jpg")));
+                }
+            };
 
             Grid.SetRow(tabControl, 0);
             Grid.SetColumn(tabControl, 0);
@@ -82,22 +87,24 @@ namespace th_launcher_wbf
             TabItem shmupsTab = new TabItem();
             shmupsTab.Header = "Shmups";
             shmupsTab.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4f6082"));
-            const int NUMBER_OF_WINDOWS_GAMES = 14;
+            shmupsTab.MouseMove += CustomMouseMove;
+            shmupsTab.MouseLeave += CustomMouseLeave;
 
             ScrollViewer scrollViewer = new ScrollViewer();
             Grid shmupsGrid = new Grid();
             scrollViewer.Content = shmupsGrid;
             shmupsGrid.Background = Brushes.Transparent;
-            SetGridDefinitions(ref shmupsGrid, NUMBER_OF_WINDOWS_GAMES);
+            SetGridDefinitions(ref shmupsGrid, gameDirs.Count);
 
-            for (int i = 0; i < NUMBER_OF_WINDOWS_GAMES; i++)
+            int index = 0;
+            foreach (var path in gameDirs)
             {
-                int gameIndex = i + 6;
-                string gamePath = gameDirs[i] + ((gameIndex < 6) ? $"/th0{gameIndex}.exe" : $"/th{gameIndex}.exe");
+                int gameIndex = index + 6;
+                string gamePath = path.Value + ((gameIndex < 6) ? $"/th0{gameIndex}.exe" : $"/th{gameIndex}.exe");
                 Button gameButton = CreateGameButton($"pack://application:,,,/images/th{gameIndex}cover.jpg", gamePath);
 
-                int row = i / BUTTONS_PER_ROW;
-                int column = i % BUTTONS_PER_ROW;
+                int row = index / BUTTONS_PER_ROW;
+                int column = index % BUTTONS_PER_ROW;
 
                 Grid.SetRow(gameButton, row);
                 Grid.SetColumn(gameButton, column);
@@ -106,30 +113,34 @@ namespace th_launcher_wbf
                 gameButton.Margin = margin;
 
                 shmupsGrid.Children.Add(gameButton);
+                index++;
             }
 
             shmupsTab.Content = scrollViewer;
             return shmupsTab;
         }
 
-        private TabItem CreateGameTab(string header, string imageFilePath, int numberOfGames, List<string> dirs)
+        private TabItem CreateGameTab(string header, string imageFilePath, JsonObject dirs)
         {
             TabItem tab = new TabItem();
             tab.Header = header;
             tab.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4f6082"));
+            tab.MouseMove += CustomMouseMove;
+            tab.MouseLeave += CustomMouseLeave;
 
             ScrollViewer scrollViewer = new ScrollViewer();
             Grid g = new Grid();
             scrollViewer.Content = g;
             g.Background = Brushes.Transparent;
-            SetGridDefinitions(ref g, numberOfGames);
+            SetGridDefinitions(ref g, dirs.Count);
 
-            for (int i = 0; i < numberOfGames; i++)
+            int index = 0;
+            foreach (var pair in dirs)
             {
-                Button b = CreateGameButton(imageFilePath + (i + 1) + ".jpg", dirs[i]); //"pack://application:,,,/images/fangames/"
+                Button b = CreateGameButton(imageFilePath + (index + 1) + ".jpg", pair.Value.ToString());
 
-                int row = i / BUTTONS_PER_ROW;
-                int column = i % BUTTONS_PER_ROW;
+                int row = index / BUTTONS_PER_ROW;
+                int column = index % BUTTONS_PER_ROW;
 
                 Grid.SetRow(b, row);
                 Grid.SetColumn(b, column);
@@ -138,6 +149,7 @@ namespace th_launcher_wbf
                 b.Margin = margin;
 
                 g.Children.Add(b);
+                index++;
             }
             tab.Content = g;
 
@@ -160,6 +172,7 @@ namespace th_launcher_wbf
             text.FontSize = 18;
             text.FontWeight = FontWeights.Bold;
             text.Foreground = Brushes.WhiteSmoke;
+            text.HorizontalAlignment = HorizontalAlignment.Center;
 
             songButtonGrid = CreateMusicButtons(songButtonGrid, text, 10);
 
@@ -186,7 +199,8 @@ namespace th_launcher_wbf
             playPause.FontWeight = FontWeights.Bold;
             playPause.Height = 75;
             playPause.Width = 75;
-            SetButtonCursorLogic(ref playPause);
+            playPause.MouseMove += CustomMouseMove;
+            playPause.MouseLeave += CustomMouseLeave;
             playPause.Click += (s, e) =>
             {
                 if (isPlaying)
@@ -211,7 +225,8 @@ namespace th_launcher_wbf
             stop.FontWeight = FontWeights.Bold;
             stop.Height = 75;
             stop.Width = 75;
-            SetButtonCursorLogic(ref stop);
+            stop.MouseMove += CustomMouseMove;
+            stop.MouseLeave += CustomMouseLeave;
             stop.Click += (s, e) =>
             {
                 if (isPlaying)
@@ -219,10 +234,10 @@ namespace th_launcher_wbf
                     isPlaying = false;
                     playPause.Content = "⏵";
                     playPause.IsEnabled = false;
+                    text.Text = "Welcome to the Music Room!";
                     m.StopTrack();
                 }
             };
-
 
             // Recreating the music buttons
             comboBox.SelectionChanged += (s, e) =>
@@ -235,14 +250,22 @@ namespace th_launcher_wbf
                 songButtonGrid = CreateMusicButtons(songButtonGrid, text, index + 6);
             };
 
-            // TODO: Style the controls better...
             DockPanel controls = new DockPanel();
+            controls.Height = 150;
+            controls.VerticalAlignment = VerticalAlignment.Top;
+
             DockPanel.SetDock(text, Dock.Top);
             controls.Children.Add(text);
             DockPanel.SetDock(comboBox, Dock.Bottom);
             controls.Children.Add(comboBox);
-            controls.Children.Add(playPause);
-            controls.Children.Add(stop);
+
+            DockPanel buttonDock = new DockPanel();
+            buttonDock.Width = 175;
+            DockPanel.SetDock(playPause, Dock.Left);
+            buttonDock.Children.Add(playPause);
+            DockPanel.SetDock(stop, Dock.Right);
+            buttonDock.Children.Add(stop);
+            controls.Children.Add(buttonDock);
 
             DockPanel.SetDock(scrollViewer, Dock.Left);
             d.Children.Add(scrollViewer);
@@ -252,7 +275,6 @@ namespace th_launcher_wbf
             musicRoomTab.Content = d;
 
             return musicRoomTab;
-            
         }
 
         private Grid CreateMusicButtons(Grid g, TextBlock t, int gameId)
@@ -273,7 +295,8 @@ namespace th_launcher_wbf
                 b.Foreground = Brushes.WhiteSmoke;
                 b.Style = SetButtonStyle();
                 b.Content = song;
-                SetButtonCursorLogic(ref b);
+                b.MouseLeave += CustomMouseLeave;
+                b.MouseMove += CustomMouseMove;
 
                 int songIndex = index;
                 b.Click += (s, e) =>
@@ -285,8 +308,8 @@ namespace th_launcher_wbf
                     isPlaying = true;
                     playPause.Content = "II";
                     MusicInfo i = new MusicInfo(
-                        new FileInfo(gameDirs[gameId - 6] + "/thbgm.dat"),
-                        new FileInfo(gameDirs[gameId - 6] + "/thbgm.fmt"),
+                        new FileInfo(gameDirs.ElementAt(gameId - 6).Value + "/thbgm.dat"),
+                        new FileInfo(gameDirs.ElementAt(gameId - 6).Value + "/thbgm.fmt"),
                         songIndex
                     );
 
@@ -323,14 +346,8 @@ namespace th_launcher_wbf
             };
 
             // Cursor Logic
-            gameButton.MouseMove += (s, e) =>
-            {
-                Cursor = Cursors.Hand;
-            };
-            gameButton.MouseLeave += (s, e) =>
-            {
-                Cursor = Cursors.Arrow;
-            };
+            gameButton.MouseMove += CustomMouseMove;
+            gameButton.MouseLeave += CustomMouseLeave;
 
             // Start the game
             gameButton.Click += (s, e) =>
@@ -342,32 +359,16 @@ namespace th_launcher_wbf
             return gameButton;
         }
 
-        private List<string> GetGameDirectories(string fileName)
-        { 
-            List<string> dirs = new List<string>();
+        private void GetJsonFromFile(string resourceFilename, ref JsonObject obj)
+        {
             var assembly = Assembly.GetExecutingAssembly();
-            string resourceName = assembly.GetManifestResourceNames().Single(str => str.EndsWith(fileName));
+            string resourceName = assembly.GetManifestResourceNames().Single(str => str.EndsWith(resourceFilename));
             using (Stream stream = assembly.GetManifestResourceStream(resourceName))
             using (StreamReader reader = new StreamReader(stream))
             {
-                while (!reader.EndOfStream)
-                    dirs.Add(reader.ReadLine());
-            }
-            return dirs;
-        }
-
-        private JsonObject GetSongNames()
-        {
-            JsonArray songNames = null;
-            var assembly = Assembly.GetExecutingAssembly();
-            string resourceName = assembly.GetManifestResourceNames().Single(str => str.EndsWith("songNamesEN.json"));
-            using (Stream stream = assembly.GetManifestResourceStream(resourceName)) 
-            using (StreamReader reader = new StreamReader(stream))
-            {
                 string jsonString = reader.ReadToEnd();
-                songInfo = JsonSerializer.Deserialize<JsonObject>(jsonString);
+                obj = JsonSerializer.Deserialize<JsonObject>(jsonString);
             }
-            return songInfo;
         }
 
         private Style SetButtonStyle()
@@ -414,16 +415,15 @@ namespace th_launcher_wbf
                 g.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) });
             }
         }
-        private void SetButtonCursorLogic(ref Button b)
+
+        private void CustomMouseMove(object sender, MouseEventArgs e)
         {
-            b.MouseMove += (s, e) =>
-            {
-                Cursor = Cursors.Hand;
-            };
-            b.MouseLeave += (s, e) =>
-            {
-                Cursor = Cursors.Arrow;
-            };
+            Mouse.OverrideCursor = Cursors.Hand;
+        }
+
+        private void CustomMouseLeave(object sender, MouseEventArgs e)
+        {
+            Mouse.OverrideCursor = Cursors.Arrow;
         }
     }
 }

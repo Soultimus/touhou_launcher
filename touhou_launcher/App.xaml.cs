@@ -6,7 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace th_launcher_wbf
+namespace touhou_launcher
 {
     /// <summary>
     /// Interaction logic for App.xaml
