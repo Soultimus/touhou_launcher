@@ -9,9 +9,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="images\bg.jpg" />
     <None Remove="images\fangames\1.jpg" />
     <None Remove="images\fangames\2.jpg" />
+    <None Remove="images\pc\1.jpg" />
+    <None Remove="images\pc\2.jpg" />
+    <None Remove="images\pc\3.jpg" />
+    <None Remove="images\pc\4.jpg" />
+    <None Remove="images\pc\5.jpg" />
     <None Remove="images\spinoffs\1.jpg" />
     <None Remove="images\spinoffs\2.jpg" />
     <None Remove="images\spinoffs\3.jpg" />
@@ -40,6 +44,7 @@
     <None Remove="images\th8cover.jpg" />
     <None Remove="images\th9cover.jpg" />
     <None Remove="info\dirs.json" />
+    <None Remove="info\songNamesEN.json" />
   </ItemGroup>
 
   <ItemGroup>
@@ -47,9 +52,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="images\bg.jpg" />
     <Resource Include="images\fangames\1.jpg" />
     <Resource Include="images\fangames\2.jpg" />
+    <Resource Include="images\pc\1.jpg" />
+    <Resource Include="images\pc\2.jpg" />
+    <Resource Include="images\pc\3.jpg" />
+    <Resource Include="images\pc\4.jpg" />
+    <Resource Include="images\pc\5.jpg" />
     <Resource Include="images\spinoffs\1.jpg" />
     <Resource Include="images\spinoffs\2.jpg" />
     <Resource Include="images\spinoffs\3.jpg" />
@@ -63,25 +72,30 @@
     <Resource Include="images\tasofro\5.jpg" />
     <Resource Include="images\tasofro\6.jpg" />
     <Resource Include="images\tasofro\7.jpg" />
-    <Resource Include="images\th10cover.jpg" />
-    <Resource Include="images\th11cover.jpg" />
-    <Resource Include="images\th12cover.jpg" />
-    <Resource Include="images\th13cover.jpg" />
-    <Resource Include="images\th14cover.jpg" />
-    <Resource Include="images\th15cover.jpg" />
-    <Resource Include="images\th16cover.jpg" />
-    <Resource Include="images\th17cover.jpg" />
-    <Resource Include="images\th18cover.jpg" />
-    <Resource Include="images\th19cover.jpg" />
-    <Resource Include="images\th6cover.jpg" />
-    <Resource Include="images\th7cover.jpg" />
-    <Resource Include="images\th8cover.jpg" />
-    <Resource Include="images\th9cover.jpg" />
+    <Resource Include="images\main\th10cover.jpg" />
+    <Resource Include="images\main\th11cover.jpg" />
+    <Resource Include="images\main\th12cover.jpg" />
+    <Resource Include="images\main\th13cover.jpg" />
+    <Resource Include="images\main\th14cover.jpg" />
+    <Resource Include="images\main\th15cover.jpg" />
+    <Resource Include="images\main\th16cover.jpg" />
+    <Resource Include="images\main\th17cover.jpg" />
+    <Resource Include="images\main\th18cover.jpg" />
+    <Resource Include="images\main\th19cover.jpg" />
+    <Resource Include="images\main\th6cover.jpg" />
+    <Resource Include="images\main\th7cover.jpg" />
+    <Resource Include="images\main\th8cover.jpg" />
+    <Resource Include="images\main\th9cover.jpg" />
     <EmbeddedResource Include="info\dirs.json" />
+    <EmbeddedResource Include="info\songNamesEN.json" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="NAudio" Version="2.2.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="images\bg\" />
   </ItemGroup>
 
 </Project>

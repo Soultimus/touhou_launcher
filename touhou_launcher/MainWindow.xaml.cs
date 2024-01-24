@@ -41,10 +41,10 @@ namespace touhou_launcher
         private void SetupWindow()
         {
             Width = 1330;
-            Height = 700;
+            Height = 712;
             // Background = new ImageBrush(new BitmapImage(new Uri($"pack://application:,,,/images/bg.jpg"))); // background color = #293243
             Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#293243"));
-            ResizeMode = ResizeMode.NoResize;
+            ResizeMode = ResizeMode.CanMinimize;
 
             TabControl tabControl = new TabControl();
             tabControl.Background = Brushes.Transparent;
@@ -52,17 +52,21 @@ namespace touhou_launcher
             TabItem shmupsTab = CreateShmupsTab();
             tabControl.Items.Add(shmupsTab);
 
-            TabItem tasofroTab = CreateGameTab("TasoFro", "pack://application:,,,/images/tasofro/", allDirs.ElementAt(1).Value as JsonObject);
+            TabItem pcTab = CreatePC98Tab();
+            tabControl.Items.Add(pcTab);
+
+            TabItem tasofroTab = CreateGameTab("TasoFro", "pack://application:,,,/images/tasofro/", allDirs.ElementAt(2).Value as JsonObject);
             tabControl.Items.Add(tasofroTab);
 
-            TabItem spinoffsTab = CreateGameTab("Spin-Offs", "pack://application:,,,/images/spinoffs/", allDirs.ElementAt(2).Value as JsonObject);
+            TabItem spinoffsTab = CreateGameTab("Spin-Offs", "pack://application:,,,/images/spinoffs/", allDirs.ElementAt(3).Value as JsonObject);
             tabControl.Items.Add(spinoffsTab);
 
-            TabItem fanGamesTab = CreateGameTab("Fan Games", "pack://application:,,,/images/fangames/", allDirs.ElementAt(3).Value as JsonObject);
+            TabItem fanGamesTab = CreateGameTab("Fan Games", "pack://application:,,,/images/fangames/", allDirs.ElementAt(4).Value as JsonObject);
             tabControl.Items.Add(fanGamesTab);
 
             TabItem musicRoomTab = CreateMusicRoomTab();
             tabControl.Items.Add(musicRoomTab);
+
 
             tabControl.SelectionChanged += (s, e) =>
             {
@@ -84,11 +88,9 @@ namespace touhou_launcher
 
         private TabItem CreateShmupsTab()
         {
-            TabItem shmupsTab = new TabItem();
-            shmupsTab.Header = "Shmups";
-            shmupsTab.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4f6082"));
-            shmupsTab.MouseMove += CustomMouseMove;
-            shmupsTab.MouseLeave += CustomMouseLeave;
+            TabItem tab = new TabItem();
+            tab.Header = "Shmups";
+            tab.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4f6082"));
 
             ScrollViewer scrollViewer = new ScrollViewer();
             Grid shmupsGrid = new Grid();
@@ -101,7 +103,7 @@ namespace touhou_launcher
             {
                 int gameIndex = index + 6;
                 string gamePath = path.Value + ((gameIndex < 6) ? $"/th0{gameIndex}.exe" : $"/th{gameIndex}.exe");
-                Button gameButton = CreateGameButton($"pack://application:,,,/images/th{gameIndex}cover.jpg", gamePath);
+                Button gameButton = CreateGameButton($"pack://application:,,,/images/main/th{gameIndex}cover.jpg", gamePath);
 
                 int row = index / BUTTONS_PER_ROW;
                 int column = index % BUTTONS_PER_ROW;
@@ -116,8 +118,50 @@ namespace touhou_launcher
                 index++;
             }
 
-            shmupsTab.Content = scrollViewer;
-            return shmupsTab;
+            tab.Content = scrollViewer;
+            return tab;
+        }
+
+        private TabItem CreatePC98Tab()
+        {
+            TabItem tab = new TabItem();
+            tab.Header = "PC-98";
+            tab.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4f6082"));
+
+            Grid g = new Grid();
+            g.Background = Brushes.Transparent;
+            JsonObject paths = allDirs.ElementAt(1).Value as JsonObject;
+            int actualGameNumber = paths.Count - 1;
+            SetGridDefinitions(ref g, actualGameNumber);
+
+            for (int i = 0; i < actualGameNumber; i++)
+            {
+                string emulatorPath = paths.ElementAt(5).Value.ToString();
+                string flag = "";
+                string gamePath = paths.ElementAt(i).Value.ToString();
+                if (gamePath.Contains(".hdi")) // Hard Disk Image
+                    flag = " -hdd ";
+                else if (gamePath.Contains(".d88")) // Disk Image
+                    flag = " -fd ";
+
+                Button gameButton = CreateGameButton($"pack://application:,,,/images/pc/{i + 1}.jpg", "\"" + emulatorPath + "\"" + flag + "\"" + gamePath + "\"");
+                gameButton.Background = Brushes.White;
+
+                int row = i / BUTTONS_PER_ROW;
+                int column = i % BUTTONS_PER_ROW;
+
+                Grid.SetRow(gameButton, row);
+                Grid.SetColumn(gameButton, column);
+
+                Thickness margin = new Thickness(BUTTON_MARGIN);
+                gameButton.Margin = margin;
+
+                g.Children.Add(gameButton);
+
+            }
+            tab.Content = g;
+
+            return tab;
         }
 
         private TabItem CreateGameTab(string header, string imageFilePath, JsonObject dirs)
@@ -125,8 +169,6 @@ namespace touhou_launcher
             TabItem tab = new TabItem();
             tab.Header = header;
             tab.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4f6082"));
-            tab.MouseMove += CustomMouseMove;
-            tab.MouseLeave += CustomMouseLeave;
 
             ScrollViewer scrollViewer = new ScrollViewer();
             Grid g = new Grid();
