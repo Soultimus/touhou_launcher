@@ -6,7 +6,5 @@
         xmlns:local="clr-namespace:touhou_launcher"
         mc:Ignorable="d"
         Title="Touhou Launcher" Height="450" Width="800">
-    <Grid>
-
-    </Grid>
+    <Grid/>
 </Window>

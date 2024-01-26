@@ -43,7 +43,7 @@
     <None Remove="images\th7cover.jpg" />
     <None Remove="images\th8cover.jpg" />
     <None Remove="images\th9cover.jpg" />
-    <None Remove="info\dirs.json" />
+    <None Remove="info\info.json" />
     <None Remove="info\songNamesEN.json" />
   </ItemGroup>
 
@@ -86,7 +86,7 @@
     <Resource Include="images\main\th7cover.jpg" />
     <Resource Include="images\main\th8cover.jpg" />
     <Resource Include="images\main\th9cover.jpg" />
-    <EmbeddedResource Include="info\dirs.json" />
+    <EmbeddedResource Include="info\info.json" />
     <EmbeddedResource Include="info\songNamesEN.json" />
   </ItemGroup>
 

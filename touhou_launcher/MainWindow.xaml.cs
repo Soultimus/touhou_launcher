@@ -18,8 +18,9 @@ namespace touhou_launcher
     public partial class MainWindow : Window
     {
         private MusicHandler m;
+        private Grid contentView;
         private Button playPause;
-        private JsonObject allDirs;
+        private JsonObject infoObj;
         private JsonObject gameDirs;
         private JsonObject songInfo;
         private bool isPlaying;
@@ -29,8 +30,8 @@ namespace touhou_launcher
 
         public MainWindow()
         {
-            GetJsonFromFile("dirs.json", ref allDirs);
-            gameDirs = allDirs.ElementAt(0).Value as JsonObject;
+            GetJsonFromFile("info.json", ref infoObj);
+            gameDirs = infoObj.ElementAt(0).Value as JsonObject;
             GetJsonFromFile("songNamesEN.json", ref songInfo);
             isPlaying = false;
 
@@ -40,57 +41,75 @@ namespace touhou_launcher
 
         private void SetupWindow()
         {
-            Width = 1330;
+            Width = 1327;
             Height = 712;
             // Background = new ImageBrush(new BitmapImage(new Uri($"pack://application:,,,/images/bg.jpg"))); // background color = #293243
             Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#293243"));
             ResizeMode = ResizeMode.CanMinimize;
 
+            DockPanel mainView = new DockPanel();
+
+            Grid tabGrid = new Grid();
+            tabGrid.Height = 25;
+            tabGrid.HorizontalAlignment = HorizontalAlignment.Left;
+            tabGrid.VerticalAlignment = VerticalAlignment.Top;
+            DockPanel.SetDock(tabGrid, Dock.Top);
+            mainView.Children.Add(tabGrid);
+
+            contentView = new Grid();
+            Border contentBorder = new Border();
+            contentBorder.BorderBrush = Brushes.White;
+            contentBorder.BorderThickness = new Thickness(0, 1, 0, 0);
+            contentBorder.Child = contentView;
+            contentView.VerticalAlignment = VerticalAlignment.Top;
+            contentView.HorizontalAlignment = HorizontalAlignment.Left;
+            mainView.Children.Add(contentBorder);
+
+            List<UIElement> tabs = new List<UIElement>();
+            ScrollViewer mainGamesTab = CreateShmupsTab();
+            tabs.Add(mainGamesTab);
+            tabs.Add(CreatePC98Tab()); // Make a ScrollView too?
+            tabs.Add(CreateGameTab("pack://application:,,,/images/tasofro/", infoObj.ElementAt(2).Value as JsonObject));
+            tabs.Add(CreateGameTab("pack://application:,,,/images/spinoffs/", infoObj.ElementAt(3).Value as JsonObject));
+            tabs.Add(CreateGameTab("pack://application:,,,/images/fangames/", infoObj.ElementAt(4).Value as JsonObject)); // Hide Scroll bar?
+            tabs.Add(CreateMusicRoomTab());
+
+            int index = 0;
+            foreach (var tab in tabs)
+            {
+                Button b = new Button();
+                b.Content = infoObj.ElementAt(index).Key;
+                b.Width = 115;
+                b.Style = SetButtonStyle();
+                b.Foreground = Brushes.WhiteSmoke;
+
+                b.Click += (s, e) => SwitchTab(tab);
+                b.MouseLeave += CustomMouseLeave;
+                b.MouseMove += CustomMouseMove;
+
+                Grid.SetColumn(b, index);
+                tabGrid.Children.Add(b);
+                tabGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) });
+                index++;
+            }            
+
+            contentView.Children.Add(mainGamesTab); // Default to main games
+
             TabControl tabControl = new TabControl();
             tabControl.Background = Brushes.Transparent;
-
-            TabItem shmupsTab = CreateShmupsTab();
-            tabControl.Items.Add(shmupsTab);
-
-            TabItem pcTab = CreatePC98Tab();
-            tabControl.Items.Add(pcTab);
-
-            TabItem tasofroTab = CreateGameTab("TasoFro", "pack://application:,,,/images/tasofro/", allDirs.ElementAt(2).Value as JsonObject);
-            tabControl.Items.Add(tasofroTab);
-
-            TabItem spinoffsTab = CreateGameTab("Spin-Offs", "pack://application:,,,/images/spinoffs/", allDirs.ElementAt(3).Value as JsonObject);
-            tabControl.Items.Add(spinoffsTab);
-
-            TabItem fanGamesTab = CreateGameTab("Fan Games", "pack://application:,,,/images/fangames/", allDirs.ElementAt(4).Value as JsonObject);
-            tabControl.Items.Add(fanGamesTab);
-
-            TabItem musicRoomTab = CreateMusicRoomTab();
-            tabControl.Items.Add(musicRoomTab);
-
-
-            tabControl.SelectionChanged += (s, e) =>
-            {
-                // TODO randomize (and draw) backgrounds
-                if (shmupsTab.IsSelected)
-                {
-                    // tabControl.Background = new ImageBrush(new BitmapImage(new Uri($"pack://application:,,,/images/bg.jpg")));
-                }
-            };
-
-            Grid.SetRow(tabControl, 0);
-            Grid.SetColumn(tabControl, 0);
 
             Grid grid = new Grid();
             grid.Children.Add(tabControl);
 
-            Content = grid;
+            Content = mainView;
         }
 
-        private TabItem CreateShmupsTab()
+        private ScrollViewer CreateShmupsTab()
         {
             TabItem tab = new TabItem();
             tab.Header = "Shmups";
             tab.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4f6082"));
+            tab.Width = 100;
 
             ScrollViewer scrollViewer = new ScrollViewer();
             Grid shmupsGrid = new Grid();
@@ -118,19 +137,14 @@ namespace touhou_launcher
                 index++;
             }
 
-            tab.Content = scrollViewer;
-            return tab;
+            return scrollViewer;
         }
 
-        private TabItem CreatePC98Tab()
+        private Grid CreatePC98Tab()
         {
-            TabItem tab = new TabItem();
-            tab.Header = "PC-98";
-            tab.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4f6082"));
-
             Grid g = new Grid();
             g.Background = Brushes.Transparent;
-            JsonObject paths = allDirs.ElementAt(1).Value as JsonObject;
+            JsonObject paths = infoObj.ElementAt(1).Value as JsonObject;
             int actualGameNumber = paths.Count - 1;
             SetGridDefinitions(ref g, actualGameNumber);
 
@@ -159,18 +173,15 @@ namespace touhou_launcher
                 g.Children.Add(gameButton);
 
             }
-            tab.Content = g;
 
-            return tab;
+            return g;
         }
 
-        private TabItem CreateGameTab(string header, string imageFilePath, JsonObject dirs)
+        private ScrollViewer CreateGameTab(string imageFilePath, JsonObject dirs)
         {
-            TabItem tab = new TabItem();
-            tab.Header = header;
-            tab.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4f6082"));
-
             ScrollViewer scrollViewer = new ScrollViewer();
+            if (dirs.Count < 4)
+                scrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
             Grid g = new Grid();
             scrollViewer.Content = g;
             g.Background = Brushes.Transparent;
@@ -193,20 +204,17 @@ namespace touhou_launcher
                 g.Children.Add(b);
                 index++;
             }
-            tab.Content = g;
 
-            return tab;
+            return scrollViewer;
         }
 
-        private TabItem CreateMusicRoomTab()
+        private DockPanel CreateMusicRoomTab()
         {
-            TabItem musicRoomTab = new TabItem();
             DockPanel d = new DockPanel();
 
             ScrollViewer scrollViewer = new ScrollViewer();
             Grid songButtonGrid = new Grid();
             scrollViewer.Content = songButtonGrid;
-            musicRoomTab.Header = "Music Room";
 
             // Define text that indicates the music that is being played
             TextBlock text = new TextBlock();
@@ -314,9 +322,16 @@ namespace touhou_launcher
             DockPanel.SetDock(controls, Dock.Right);
             d.Children.Add(controls);
 
-            musicRoomTab.Content = d;
+            return d;
+        }
 
-            return musicRoomTab;
+        private void SwitchTab(UIElement elem)
+        {
+            if (!contentView.Children.Contains(elem) || contentView.Children[0] != elem)
+            {
+                contentView.Children.Clear();
+                contentView.Children.Add(elem);
+            }
         }
 
         private Grid CreateMusicButtons(Grid g, TextBlock t, int gameId)
