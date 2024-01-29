@@ -71,7 +71,7 @@ namespace touhou_launcher
             tabs.Add(CreatePC98Tab()); // Make a ScrollView too?
             tabs.Add(CreateGameTab("pack://application:,,,/images/tasofro/", infoObj.ElementAt(2).Value as JsonObject));
             tabs.Add(CreateGameTab("pack://application:,,,/images/spinoffs/", infoObj.ElementAt(3).Value as JsonObject));
-            tabs.Add(CreateGameTab("pack://application:,,,/images/fangames/", infoObj.ElementAt(4).Value as JsonObject)); // Hide Scroll bar?
+            tabs.Add(CreateGameTab("pack://application:,,,/images/fangames/", infoObj.ElementAt(4).Value as JsonObject));
             tabs.Add(CreateMusicRoomTab());
 
             int index = 0;
@@ -208,11 +208,13 @@ namespace touhou_launcher
             return scrollViewer;
         }
 
-        private DockPanel CreateMusicRoomTab()
+        private Grid CreateMusicRoomTab()
         {
-            DockPanel d = new DockPanel();
+            Grid g = new Grid();
+            SetGridDefinitions(ref g);
 
             ScrollViewer scrollViewer = new ScrollViewer();
+            Grid.SetColumn(scrollViewer, 0);
             Grid songButtonGrid = new Grid();
             scrollViewer.Content = songButtonGrid;
 
@@ -222,16 +224,17 @@ namespace touhou_launcher
             text.FontSize = 18;
             text.FontWeight = FontWeights.Bold;
             text.Foreground = Brushes.WhiteSmoke;
-            text.HorizontalAlignment = HorizontalAlignment.Center;
+            text.TextAlignment = TextAlignment.Center;
 
             songButtonGrid = CreateMusicButtons(songButtonGrid, text, 10);
+            songButtonGrid.HorizontalAlignment = HorizontalAlignment.Left;
 
             // Combobox logic
-            ComboBox comboBox = new ComboBox();
-            comboBox.Width = 350;
-            // Style comboBoxStyle = new Style(typeof(ComboBox));
-            // comboBoxStyle.Setters.Add(new Setter(ForegroundProperty, Brushes.WhiteSmoke));
-            // comboBox.Style = comboBoxStyle;
+            ComboBox comboBox = new ComboBox
+            {
+                Width = 350,
+                ItemContainerStyle = CreateItemContainerStyle()
+            };
 
             foreach (var elem in songInfo)
             {
@@ -303,6 +306,8 @@ namespace touhou_launcher
             DockPanel controls = new DockPanel();
             controls.Height = 150;
             controls.VerticalAlignment = VerticalAlignment.Top;
+            controls.HorizontalAlignment = HorizontalAlignment.Center;
+            controls.Width = 750;
 
             DockPanel.SetDock(text, Dock.Top);
             controls.Children.Add(text);
@@ -317,12 +322,32 @@ namespace touhou_launcher
             buttonDock.Children.Add(stop);
             controls.Children.Add(buttonDock);
 
-            DockPanel.SetDock(scrollViewer, Dock.Left);
-            d.Children.Add(scrollViewer);
-            DockPanel.SetDock(controls, Dock.Right);
-            d.Children.Add(controls);
+            g.Children.Add(scrollViewer);
 
-            return d;
+            Grid.SetColumn(controls, 1);
+            g.Children.Add(controls);
+
+            // Actually centers the controls
+            Grid dummy = new Grid();
+            Grid.SetColumn(dummy, 2);
+            TextBlock t = new TextBlock();
+            t.Text = "You're not supposed to see this!!";
+            dummy.Background = Brushes.Red;
+            dummy.Children.Add(t);
+            g.Children.Add(dummy);
+
+            return g;
+        }
+
+        private Style CreateItemContainerStyle()
+        {
+            Style itemContainerStyle = new Style(typeof(ComboBoxItem));
+            itemContainerStyle.Setters.Add(new Setter(BackgroundProperty, Brushes.Transparent));
+            itemContainerStyle.Setters.Add(new Setter(BorderThicknessProperty, new Thickness(0)));
+            itemContainerStyle.Setters.Add(new Setter(ForegroundProperty, Brushes.Black));
+            itemContainerStyle.Setters.Add(new Setter(BackgroundProperty, Brushes.SlateGray));
+
+            return itemContainerStyle;
         }
 
         private void SwitchTab(UIElement elem)
@@ -458,7 +483,7 @@ namespace touhou_launcher
             return buttonStyle;
         }
 
-        private void SetGridDefinitions(ref Grid g, int numberOfGames)
+        private void SetGridDefinitions(ref Grid g, int numberOfGames = 0)
         {
             int numberOfRows = (int)Math.Ceiling((double)numberOfGames / BUTTONS_PER_ROW);
 
